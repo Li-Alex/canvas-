@@ -1,0 +1,113 @@
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8"> 
+    <title>canvas 粒子链效果</title> 
+    <style> 
+        body{ 
+            width: 100%;
+            height: 100%;
+            padding: 0; 
+            margin: 0; 
+            overflow: hidden; 
+        } 
+    </style> 
+</head> 
+<body> 
+   <canvas id="canvas" style="background:#000;height:100%;"></canvas> 
+   <script> 
+        const WIDTH = window.innerWidth
+        const HEIGHT = window.innerHeight
+        
+        function getBall(ctx){
+            let ballsArr = []
+            let ballsNum = 100
+            for(let i = 0; i < ballsNum; i++){
+                let cirX = Math.floor(window.innerWidth * Math.random()),
+                    cirY = Math.floor(window.innerHeight * Math.random()),
+                    radius = Math.floor(3 + 5 * Math.random())
+                let ball = {
+                    x: cirX,
+                    y: cirY,
+                    currentX: cirX,
+                    currentY: cirY,
+                    g: 2,
+                    vx: parseInt(2 * Math.random(),10) - 1,
+                    vy: parseInt(2 * Math.random(),10) - 1,
+                    radius: radius,
+                    color: 'rgba(255,255,255,' + Math.random() + ')',
+                    draw: function(){
+                        ctx.beginPath()
+                        ctx.arc(this.x,this.y,this.radius,0,Math.PI * 2)
+                        ctx.closePath()
+                        ctx.fillStyle = this.color
+                        ctx.fill()
+                    }
+                }
+                ballsArr.push(ball)
+            }
+            return ballsArr
+        }
+        function drawBall(ctx,ballsQuery){
+            for(let i = 0, len = ballsQuery.length; i < len; i++){
+                ballsQuery[i].draw()
+            }
+        }
+        function update(ctx,ballsQuery){
+            for(let i = 0,len = ballsQuery.length; i < len; i++){
+                let self = ballsQuery[i]
+                self.x += self.vx
+                self.y += self.vy
+                if(self.x >= self.currentX + 100) self.vx = -self.vx
+                if(self.x <= self.currentX - 100) self.vx = Math.abs(self.vx)
+                if(self.y >= self.currentY + 100) self.vy = -self.vy
+                if(self.y <= self.currentY - 100) self.vy = Math.abs(self.vy)
+                for(let p = 0; p < len; p++){
+                    let other = ballsQuery[p]
+                    if(Math.abs(self.x - other.x) < 50 && Math.abs(self.y - other.y) < 50){
+                        ctx.beginPath()
+                        ctx.moveTo(self.x,self.y)
+                        ctx.lineTo(other.x,other.y)
+                        ctx.lineWidth = 2
+                        ctx.strokeStyle = self.color
+                        ctx.stroke()
+                    }
+                }
+            }
+        }
+        function render(ctx,ballsQuery){
+            setInterval(_ => {
+                let direct = null
+                ctx.clearRect(0,0,WIDTH,HEIGHT)
+                drawBall(ctx,ballsQuery)
+                update(ctx,ballsQuery)
+            },30)
+        }
+        window.onload = function(){
+            let canvas = document.querySelector('canvas'),
+                context = canvas.getContext('2d')
+            canvas.width = WIDTH; 
+            canvas.height = HEIGHT; 
+            let ballsQuery = getBall(context)
+            render(context,ballsQuery)
+            canvas.addEventListener('mousemove',function(e){
+                for(let i = 0, len = ballsQuery.length; i < len; i++){
+                    let self = ballsQuery[i],
+                    currentX = e.clientX,
+                    currentY = e.clientY
+                    if(Math.abs(currentX - self.x) < 150 && Math.abs(currentY - self.y) < 150){
+                        context.beginPath()
+                        context.moveTo(currentX,currentY)
+                        context.lineTo(self.x,self.y)
+                        context.lineWidth = 2
+                        context.strokeStyle = self.color
+                        context.stroke()
+                    }
+                }
+            })
+        }
+           
+               
+   </script> 
+</body> 
+</html>
